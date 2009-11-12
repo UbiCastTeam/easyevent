@@ -130,19 +130,21 @@ class Listener:
         self.event_silent = silent
         logger.debug('Dispatcher in use is %s' %dispatcher)
         
-    def register_event(self, event_type):
+    def register_event(self, *event_types):
         """ Registers itself to a new event.
         @param event_type: Type of the event to listen.
         @type event_type: C{str}
         """
-        self.event_manager.add_listener(self, event_type)
+        for type in event_types:
+            self.event_manager.add_listener(self, type)
         
-    def unregister_event(self, event_type):
+    def unregister_event(self, *event_types):
         """ Unregisters itself from a event.
         @param event_type: Type of the event which was listening.
         @type event_type: C{str}
         """
-        self.event_manager.remove_listener(self, event_type)
+        for type in event_types:
+            self.event_manager.remove_listener(self, type)
 
 
 class Launcher:
