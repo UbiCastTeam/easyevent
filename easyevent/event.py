@@ -74,7 +74,7 @@ class Manager:
                             function(event)
                         continue
                     else:
-                        logger.warning('Event-specific handler found but not callable')
+                        logger.warning('Event-specific handler found but not callable.')
                 # Try to call default handle method
                 if hasattr(obj, obj.event_default):
                     function = getattr(obj, obj.event_default)
@@ -89,7 +89,7 @@ class Manager:
                 if not obj.event_silent:
                     raise UnhandledEventError('%s has no method to handle %s' %(obj, event))
         else:
-            logger.error('No event.type %s' % event.type)
+            logger.warning('No listener for the event type %r.', event.type)
 
 Manager()
     
@@ -128,7 +128,7 @@ class Listener:
         self.event_pattern = prefix + '%s' + suffix
         self.event_default = default
         self.event_silent = silent
-        logger.debug('Dispatcher in use is %s' %dispatcher)
+        #logger.debug('Dispatcher in use is %s' %dispatcher)
         
     def register_event(self, *event_types):
         """ Registers itself to a new event.
@@ -136,6 +136,7 @@ class Listener:
         @type event_type: C{str}
         """
         for type in event_types:
+            logger.debug('Registering to event type %s.', type)
             self.event_manager.add_listener(self, type)
         
     def unregister_event(self, *event_types):
@@ -156,7 +157,7 @@ class Launcher:
     def __init__(self):
         """ Launcher constructor. """
         self.event_manager = Manager.instance
-        logger.debug('Dispatcher in use is %s' %dispatcher)
+        #logger.debug('Dispatcher in use is %s' %dispatcher)
         
     def launch_event(self, event_type, content=None):
         """ Launches a new event to the listeners.
@@ -165,6 +166,7 @@ class Launcher:
         @param content: Content to attach with the event (Optional).
         @type content: any
         """
+        logger.debug('Launching event type %s', event_type)
         self.event_manager.dispatch_event(Event(event_type, self, content))
 
 
@@ -179,11 +181,19 @@ class User(Launcher, Listener):
 class forward_event(User):
     """ Listen for an event type and forward these events as another event type.
     """
-    def __init__(self, input_event_type, output_event_type, overridden_content=None):
+    def __init__(self, input_event_type, output_event_type,
+                                                      overridden_content=None):
         User.__init__(self)
         self.register_event(input_event_type)
-        setattr(self, 'evt_' + input_event_type,
-                lambda evt: self.launch_event(output_event_type, overridden_content or evt.content))
+        self.event_type = output_event_type
+        self.content = overridden_content
+        setattr(self, 'evt_' + input_event_type, self.forward)
+    
+    def forward(self, event):
+        content = self.content
+        if content is None:
+            content = event.content
+        self.launch_event(self.event_type, content)
 
 
 class Event:
