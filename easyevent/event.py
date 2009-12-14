@@ -195,6 +195,24 @@ class forward_event(User):
             content = event.content
         self.launch_event(self.event_type, content)
 
+class forward_gsignal(User):
+    """ Connect an instance of forward_gsignal to a gobject signal to launch
+    an event having the given event_type when receiving connected gsignal.
+    """
+    def __init__(self, event_type):
+        User.__init__(self)
+        self.event_type = event_type
+    
+    def __call__(self, source, *args):
+        nb_args = len(args)
+        if nb_args == 0:
+            content = None
+        elif nb_args == 1:
+            content = args[0]
+        else:
+            content = args
+        self.event_manager.dispatch_event(
+                                       Event(self.event_type, source, content))
 
 class Event:
     """ Represents an event entity.
