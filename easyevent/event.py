@@ -91,8 +91,7 @@ class Manager:
                 if not obj.event_silent:
                     raise UnhandledEventError('%s has no method to handle %s' %(obj, event))
         else:
-            if event_type not in log_ignores:
-                logger.warning('No listener for the event type %r.', event.type)
+            logger.warning('No listener for the event type %r.', event.type)
 
 Manager()
     
