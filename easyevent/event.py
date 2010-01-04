@@ -170,7 +170,7 @@ class Launcher:
         @type content: any
         """
         if event_type not in log_ignores:
-            logger.debug('Launching event type %s', event_type)
+            logger.debug('Launching event type %s from %s', %(event_type, self))
         self.event_manager.dispatch_event(Event(event_type, self, content))
 
 
