@@ -17,6 +17,8 @@ import logging
 logger = logging.getLogger('event')
 dispatcher = 'callback'
 
+log_ignores = []
+
 class Manager:
     """ Manages the event-system.
     This class is instanciated on importing the module,
@@ -89,7 +91,8 @@ class Manager:
                 if not obj.event_silent:
                     raise UnhandledEventError('%s has no method to handle %s' %(obj, event))
         else:
-            logger.warning('No listener for the event type %r.', event.type)
+            if event_type not in log_ignores:
+                logger.warning('No listener for the event type %r.', event.type)
 
 Manager()
     
@@ -166,7 +169,8 @@ class Launcher:
         @param content: Content to attach with the event (Optional).
         @type content: any
         """
-        logger.debug('Launching event type %s', event_type)
+        if event_type not in log_ignores:
+            logger.debug('Launching event type %s', event_type)
         self.event_manager.dispatch_event(Event(event_type, self, content))
 
 
