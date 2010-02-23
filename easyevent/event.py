@@ -55,12 +55,19 @@ class Manager:
         if event_type in self.listeners and obj in self.listeners[event_type]:
             self.listeners[event_type].remove(obj)
     
+    def get_events_listened_by(self, obj):
+        result = list()
+        for type, listeners in self.listeners.iteritems():
+            if obj in listeners:
+                result.append(type)
+        return result
+    
     def dispatch_event(self, event):
         """ Dispatch a launched event to all affected listeners.
         @param event: Event launched.
         @type event: C{L{Event}}
         """
-        if event.type in self.listeners:
+        if event.type in self.listeners and self.listeners[event.type]:
             for obj in self.listeners[event.type]:
                 # Try to call event-specific handle method
                 fctname = obj.event_pattern %(event.type)
@@ -89,7 +96,7 @@ class Manager:
                 if not obj.event_silent:
                     raise UnhandledEventError('%s has no method to handle %s' %(obj, event))
         else:
-            logger.warning('No listener for the event type %r.', event.type)
+            pass#logger.warning('No listener for the event type %r.', event.type)
 
 Manager()
     
@@ -146,6 +153,11 @@ class Listener:
         """
         for type in event_types:
             self.event_manager.remove_listener(self, type)
+    
+    def unregister_all_events(self):
+        """ Unregisters itself from all listened events.
+        """
+        self.unregister_event(*self.event_manager.get_events_listened_by(self))
 
 
 class Launcher:
