@@ -17,7 +17,7 @@ import logging
 logger = logging.getLogger('event')
 dispatcher = 'callback'
 
-log_ignores = []
+log_ignores = ["level"]
 
 class Manager:
     """ Manages the event-system.
@@ -43,7 +43,16 @@ class Manager:
         """
         if event_type in self.listeners:
             if obj not in self.listeners[event_type]:
-                self.listeners[event_type].append(obj)
+                self.listeners[event_type].append(obj)          
+            class_name = obj.__class__
+            i = 0
+            duplicate_objects = list()
+            for listener in self.listeners[event_type]:
+                if listener.__class__ == class_name and listener != obj:
+                    duplicate_objects.append(listener)
+                    i += 1
+            if i > 0:
+                logger.warning('Warning, multiple class registration detected (%s times) for class %s for event %s, objects: old %s and new %s' %(i, class_name, event_type, duplicate_objects, obj))
         else:
             self.listeners[event_type] = [obj]
     
