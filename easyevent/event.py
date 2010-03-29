@@ -52,7 +52,7 @@ class Manager:
                     duplicate_objects.append(listener)
                     i += 1
             if i > 0:
-                logger.warning('Warning, multiple class registration detected (%s times) for class %s for event %s, objects: old %s and new %s' %(i, class_name, event_type, duplicate_objects, obj))
+                logger.warning('Warning, multiple class registration detected (%s times) for class %s for event %s, objects: old %s and new %s', i, class_name, event_type, duplicate_objects, obj)
         else:
             self.listeners[event_type] = [obj]
     
