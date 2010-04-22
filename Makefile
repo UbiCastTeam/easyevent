@@ -13,4 +13,9 @@ uninstall:
 	sudo rm -v /usr/lib/python2.5/site-packages/easyevent*.egg-info
 
 clean:
-	rm -vrf build
+	rm -rf build
+	rm -f build-stamp
+	find . -name "*.pyc" -o -name "*~" | xargs -r rm
+
+builddeb:
+	dpkg-buildpackage -rfakeroot
