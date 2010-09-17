@@ -87,7 +87,7 @@ class Manager:
                     if callable(function):
                         if dispatcher == 'gobject':
                             import gobject
-                            gobject.idle_add(function, event)
+                            gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
                         continue
@@ -99,7 +99,7 @@ class Manager:
                     if callable(function):
                         if dispatcher == 'gobject':
                             import gobject
-                            gobject.idle_add(function, event)
+                            gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
                         continue
@@ -107,7 +107,8 @@ class Manager:
                 if not obj.event_silent:
                     raise UnhandledEventError('%s has no method to handle %s' %(obj, event))
         else:
-            pass#logger.warning('No listener for the event type %r.', event.type)
+            #logger.warning('No listener for the event type %r.', event.type)
+            pass
 
 Manager()
     
