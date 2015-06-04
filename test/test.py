@@ -1,12 +1,7 @@
-# easyevent 
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Copyright 2015, Florent Thiery 
 
-## Description
-
-EasyEvent is a basic publish/subscribe library that supports callback or gobject dispatchers.
-
-## Usage
-
-```
 from __future__ import print_function
 import easyevent
 
@@ -31,4 +26,4 @@ if __name__ == "__main__":
     s.shout("hello world")
     # at that point, Listener prints "Got speech event: hello world"
     l.unregister_event("speech")
-```
+    #l.unregister_all_events()
