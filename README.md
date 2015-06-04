@@ -1,5 +1,6 @@
 # easyevent is a simple Python pubsub library
 
+```
 import easyevent
 from __future__ import print_function
 
@@ -24,3 +25,4 @@ if __name__ == "__main__":
     s.shout("hello world")
     # at that point, Listener prints "Got speech event: hello world"
     l.unregister_event("speech")
+```
