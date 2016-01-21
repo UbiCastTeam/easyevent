@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, imp
+import imp
 from distutils.core import setup
 
 easyevent = imp.load_source("version", "easyevent/version.py")
@@ -14,5 +14,5 @@ setup(
     author_email="damien.boucard@ubicast.eu",
     url="http://launchpad.net/easyevent",
     license="Gnu/LGPLv2",
-    packages = ['easyevent'],
+    packages=['easyevent'],
 )

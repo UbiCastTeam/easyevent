@@ -14,10 +14,18 @@ Module attributes:
 """
 
 import logging
+try:
+    is_callable = callable
+except NameError:
+    # Python 3
+    import collections
+    is_callable = lambda fct: isinstance(fct, collections.Callable)
+
 logger = logging.getLogger('event')
 dispatcher = 'callback'
 
 log_ignores = ["level"]
+
 
 class Manager:
     """ Manages the event-system.
@@ -43,7 +51,7 @@ class Manager:
         """
         if event_type in self.listeners:
             if obj not in self.listeners[event_type]:
-                self.listeners[event_type].append(obj)          
+                self.listeners[event_type].append(obj)
             class_name = obj.__class__
             i = 0
             duplicate_objects = list()
@@ -68,7 +76,7 @@ class Manager:
     
     def get_events_listened_by(self, obj):
         result = list()
-        for type, listeners in self.listeners.iteritems():
+        for type, listeners in self.listeners.items():
             if obj in listeners:
                 result.append(type)
         return result
@@ -81,10 +89,10 @@ class Manager:
         if event.type in self.listeners and self.listeners[event.type]:
             for obj in self.listeners[event.type]:
                 # Try to call event-specific handle method
-                fctname = obj.event_pattern %(event.type)
+                fctname = obj.event_pattern % (event.type)
                 if hasattr(obj, fctname):
                     function = getattr(obj, fctname)
-                    if callable(function):
+                    if is_callable(function):
                         if dispatcher == 'gobject':
                             import gobject
                             gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
@@ -96,7 +104,7 @@ class Manager:
                 # Try to call default handle method
                 if hasattr(obj, obj.event_default):
                     function = getattr(obj, obj.event_default)
-                    if callable(function):
+                    if is_callable(function):
                         if dispatcher == 'gobject':
                             import gobject
                             gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
@@ -105,13 +113,14 @@ class Manager:
                         continue
                 # No handle method found, raise error ?
                 if not obj.event_silent:
-                    raise UnhandledEventError('%s has no method to handle %s' %(obj, event))
+                    raise UnhandledEventError('%s has no method to handle %s' % (obj, event))
         else:
             #logger.warning('No listener for the event type %r.', event.type)
             pass
 
 Manager()
-    
+
+
 class Listener:
     """ Generic class for listening to events.
     
@@ -191,7 +200,7 @@ class Launcher:
         @type content: any
         """
         if event_type not in log_ignores:
-            logger.debug('Launching event type %s from %s' %(event_type, self))
+            logger.debug('Launching event type %s from %s' % (event_type, self))
         self.event_manager.dispatch_event(Event(event_type, self, content))
 
 
@@ -206,8 +215,7 @@ class User(Launcher, Listener):
 class forward_event(User):
     """ Listen for an event type and forward these events as another event type.
     """
-    def __init__(self, input_event_type, output_event_type,
-                                                      overridden_content=None):
+    def __init__(self, input_event_type, output_event_type, overridden_content=None):
         User.__init__(self)
         self.register_event(input_event_type)
         self.event_type = output_event_type
@@ -219,6 +227,7 @@ class forward_event(User):
         if content is None:
             content = event.content
         self.launch_event(self.event_type, content)
+
 
 class forward_gsignal(User):
     """ Connect an instance of forward_gsignal to a gobject signal to launch
@@ -236,8 +245,8 @@ class forward_gsignal(User):
             content = args[0]
         else:
             content = args
-        self.event_manager.dispatch_event(
-                                       Event(self.event_type, source, content))
+        self.event_manager.dispatch_event(Event(self.event_type, source, content))
+
 
 class Event:
     """ Represents an event entity.
@@ -266,7 +275,7 @@ class Event:
         @return: Object converted string.
         @rtype: C{str}
         """
-        return '<%s.%s type=%s source=%s content=%s>' %(__name__, self.__class__.__name__, self.type, self.source, self.content)
+        return '<%s.%s type=%s source=%s content=%s>' % (__name__, self.__class__.__name__, self.type, self.source, self.content)
     
     
 class UnhandledEventError(AttributeError):
