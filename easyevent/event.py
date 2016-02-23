@@ -14,10 +14,12 @@ Module attributes:
 """
 
 import logging
+
+
 try:
-    is_callable = callable
     import gobject
-except NameError:
+    is_callable = callable
+except (NameError, ImportError):
     # Python 3
     from gi.repository import GObject as gobject
     import collections
