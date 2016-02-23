@@ -16,8 +16,10 @@ Module attributes:
 import logging
 try:
     is_callable = callable
+    import gobject
 except NameError:
     # Python 3
+    from gi.repository import GObject as gobject
     import collections
     is_callable = lambda fct: isinstance(fct, collections.Callable)
 
@@ -41,7 +43,7 @@ class Manager:
         if not hasattr(Manager, 'instance'):
             Manager.instance = self
         self.listeners = {}
-        
+
     def add_listener(self, obj, event_type):
         """ Add a listener to a specific event.
         @param obj: Listener to add.
@@ -63,7 +65,7 @@ class Manager:
                 logger.warning('Warning, multiple class registration detected (%s times) for class %s for event %s, objects: old %s and new %s', i, class_name, event_type, duplicate_objects, obj)
         else:
             self.listeners[event_type] = [obj]
-    
+
     def remove_listener(self, obj, event_type):
         """ Remove a listener from a specific event.
         @param obj: Listener to remove.
@@ -73,14 +75,14 @@ class Manager:
         """
         if event_type in self.listeners and obj in self.listeners[event_type]:
             self.listeners[event_type].remove(obj)
-    
+
     def get_events_listened_by(self, obj):
         result = list()
         for type, listeners in self.listeners.items():
             if obj in listeners:
                 result.append(type)
         return result
-    
+
     def dispatch_event(self, event):
         """ Dispatch a launched event to all affected listeners.
         @param event: Event launched.
@@ -94,7 +96,6 @@ class Manager:
                     function = getattr(obj, fctname)
                     if is_callable(function):
                         if dispatcher == 'gobject':
-                            import gobject
                             gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
@@ -106,7 +107,6 @@ class Manager:
                     function = getattr(obj, obj.event_default)
                     if is_callable(function):
                         if dispatcher == 'gobject':
-                            import gobject
                             gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
@@ -115,7 +115,7 @@ class Manager:
                 if not obj.event_silent:
                     raise UnhandledEventError('%s has no method to handle %s' % (obj, event))
         else:
-            #logger.warning('No listener for the event type %r.', event.type)
+            # logger.warning('No listener for the event type %r.', event.type)
             pass
 
 Manager()
@@ -123,14 +123,14 @@ Manager()
 
 class Listener:
     """ Generic class for listening to events.
-    
+
     It is just needed to herite from this class and register to events to listen easily events.
     It is also needed to write handler methods with event-specific and/or C{L{default}} function.
-    
+
     Event-specific functions have name as the concatenation of the C{prefix} parameter + the listened event type + the C{suffix} parameter.
-    
+
     If it does not exist, the default function is called as defined by the C{L{default}} parameter/attribute.
-    
+
     If the event cannot be handled, a C{L{UnhandledEventError}} is raised, except if C{L{silent}} flag is C{True}.
     @ivar event_manager: The event manager instance.
     @type event_manager: C{L{Manager}}
@@ -156,8 +156,8 @@ class Listener:
         self.event_pattern = prefix + '%s' + suffix
         self.event_default = default
         self.event_silent = silent
-        #logger.debug('Dispatcher in use is %s' %dispatcher)
-        
+        # logger.debug('Dispatcher in use is %s' %dispatcher)
+
     def register_event(self, *event_types):
         """ Registers itself to a new event.
         @param event_type: Type of the event to listen.
@@ -166,7 +166,7 @@ class Listener:
         for type in event_types:
             logger.debug('Registering to event type %s.', type)
             self.event_manager.add_listener(self, type)
-        
+
     def unregister_event(self, *event_types):
         """ Unregisters itself from a event.
         @param event_type: Type of the event which was listening.
@@ -174,7 +174,7 @@ class Listener:
         """
         for type in event_types:
             self.event_manager.remove_listener(self, type)
-    
+
     def unregister_all_events(self):
         """ Unregisters itself from all listened events.
         """
@@ -190,8 +190,8 @@ class Launcher:
     def __init__(self):
         """ Launcher constructor. """
         self.event_manager = Manager.instance
-        #logger.debug('Dispatcher in use is %s' %dispatcher)
-        
+        # logger.debug('Dispatcher in use is %s' %dispatcher)
+
     def launch_event(self, event_type, content=None):
         """ Launches a new event to the listeners.
         @param event_type: Type of the event to launch.
@@ -221,7 +221,7 @@ class forward_event(User):
         self.event_type = output_event_type
         self.content = overridden_content
         setattr(self, 'evt_' + input_event_type, self.forward)
-    
+
     def forward(self, event):
         content = self.content
         if content is None:
@@ -236,7 +236,7 @@ class forward_gsignal(User):
     def __init__(self, event_type):
         User.__init__(self)
         self.event_type = event_type
-    
+
     def __call__(self, source, *args):
         nb_args = len(args)
         if nb_args == 0:
@@ -269,15 +269,15 @@ class Event:
         self.type = type
         self.source = source
         self.content = content
-    
+
     def __str__(self):
         """ Converts object itself to string.
         @return: Object converted string.
         @rtype: C{str}
         """
         return '<%s.%s type=%s source=%s content=%s>' % (__name__, self.__class__.__name__, self.type, self.source, self.content)
-    
-    
+
+
 class UnhandledEventError(AttributeError):
     """ Error raised when an event cannot be handled, except if C{L{silent<Listener.silent>}} flag is C{True}. """
     pass
