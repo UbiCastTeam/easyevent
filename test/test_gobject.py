@@ -5,9 +5,9 @@
 from __future__ import print_function
 
 try:
-    import gobject
-except:
     from gi.repository import GObject as gobject
+except:
+    import gobject
 
 import easyevent
 import sys

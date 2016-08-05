@@ -15,15 +15,13 @@ Module attributes:
 
 import logging
 
-
+# reverse try except to support python 3.5
 try:
-    import gobject
-    is_callable = callable
-except (NameError, ImportError):
-    # Python 3
     from gi.repository import GObject as gobject
     import collections
     is_callable = lambda fct: isinstance(fct, collections.Callable)
+except:
+    import gobject
 
 logger = logging.getLogger('event')
 dispatcher = 'callback'
