@@ -22,6 +22,7 @@ try:
     is_callable = lambda fct: isinstance(fct, collections.Callable)
 except:
     import gobject
+    is_callable = callable
 
 logger = logging.getLogger('event')
 dispatcher = 'callback'
