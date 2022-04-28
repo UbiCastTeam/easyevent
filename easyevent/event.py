@@ -12,22 +12,13 @@ Module attributes:
    'gobject' (asynchronous),
    'callback' (synchronous).
 """
-
+from collections.abc import Callable
+from gi.repository import GLib
 import logging
-
-# reverse try except to support python 3.5
-try:
-    from gi.repository import GObject as gobject
-    import collections
-    is_callable = lambda fct: isinstance(fct, collections.Callable)
-except:
-    import gobject
-    is_callable = callable
 
 logger = logging.getLogger('event')
 dispatcher = 'callback'
-
-log_ignores = ["level"]
+log_ignores = ['level']
 
 
 class Manager:
@@ -95,9 +86,9 @@ class Manager:
                 fctname = obj.event_pattern % (event.type)
                 if hasattr(obj, fctname):
                     function = getattr(obj, fctname)
-                    if is_callable(function):
+                    if isinstance(function, Callable):
                         if dispatcher == 'gobject':
-                            gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
+                            GLib.idle_add(function, event, priority=GLib.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
                         continue
@@ -106,9 +97,9 @@ class Manager:
                 # Try to call default handle method
                 if hasattr(obj, obj.event_default):
                     function = getattr(obj, obj.event_default)
-                    if is_callable(function):
+                    if isinstance(function, Callable):
                         if dispatcher == 'gobject':
-                            gobject.idle_add(function, event, priority=gobject.PRIORITY_HIGH)
+                            GLib.idle_add(function, event, priority=GLib.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
                         continue
@@ -118,6 +109,7 @@ class Manager:
         else:
             # logger.warning('No listener for the event type %r.', event.type)
             pass
+
 
 Manager()
 
