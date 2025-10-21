@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Module to do event-driven programming very easily.
 @author: Damien Boucard
-@license: Gnu/LGPLv2
-@version: 1.0
 
 Module attributes:
 
@@ -13,12 +9,20 @@ Module attributes:
    'callback' (synchronous).
 """
 from collections.abc import Callable
-from gi.repository import GLib
 import logging
 
 logger = logging.getLogger('event')
 dispatcher = 'callback'
 log_ignores = ['level']
+GLib = None
+
+
+def get_glib():
+    # GLib is optional, so import it when needed
+    global GLib
+    if GLib is None:
+        from gi.repository import GLib
+    return GLib
 
 
 class Manager:
@@ -27,7 +31,8 @@ class Manager:
     so it is not needed to use it directly but via Launch and Listener.
     @cvar instance: The instance created on importing the module.
     @type instance: C{L{Manager}}
-    @ivar listeners: Dictionnary with keys of type C{str} representing a event type and with values of type C{list} representing a collection of C{EventListener}.
+    @ivar listeners: Dictionnary with keys of type C{str} representing a event type and with values
+                     of type C{list} representing a collection of C{EventListener}.
     @type listeners: C{dict<str, list<L{Listener}>>}
     """
     def __init__(self):
@@ -54,7 +59,11 @@ class Manager:
                     duplicate_objects.append(listener)
                     i += 1
             if i > 0:
-                logger.warning('Warning, multiple class registration detected (%s times) for class %s for event %s, objects: old %s and new %s', i, class_name, event_type, duplicate_objects, obj)
+                logger.warning(
+                    'Warning, multiple class registration detected (%s times) '
+                    'for class %s for event %s, objects: old %s and new %s',
+                    i, class_name, event_type, duplicate_objects, obj
+                )
         else:
             self.listeners[event_type] = [obj]
 
@@ -88,7 +97,8 @@ class Manager:
                     function = getattr(obj, fctname)
                     if isinstance(function, Callable):
                         if dispatcher == 'gobject':
-                            GLib.idle_add(function, event, priority=GLib.PRIORITY_HIGH)
+                            gl = get_glib()
+                            gl.idle_add(function, event, priority=gl.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
                         continue
@@ -99,7 +109,8 @@ class Manager:
                     function = getattr(obj, obj.event_default)
                     if isinstance(function, Callable):
                         if dispatcher == 'gobject':
-                            GLib.idle_add(function, event, priority=GLib.PRIORITY_HIGH)
+                            gl = get_glib()
+                            gl.idle_add(function, event, priority=gl.PRIORITY_HIGH)
                         elif dispatcher == 'callback':
                             function(event)
                         continue
@@ -120,7 +131,8 @@ class Listener:
     It is just needed to herite from this class and register to events to listen easily events.
     It is also needed to write handler methods with event-specific and/or C{L{default}} function.
 
-    Event-specific functions have name as the concatenation of the C{prefix} parameter + the listened event type + the C{suffix} parameter.
+    Event-specific functions have name as the concatenation of:
+    the C{prefix} parameter + the listened event type + the C{suffix} parameter.
 
     If it does not exist, the default function is called as defined by the C{L{default}} parameter/attribute.
 
@@ -131,7 +143,8 @@ class Listener:
     @type event_pattern: C{str}
     @ivar event_default: Default handler function name.
     @type event_default: C{str}
-    @ivar silent: Silent flag. If C{False}, C{L{UnhandledEventError}} is raised if an event cannot be handled. If C{True}, do nothing, listener does not handle the event.
+    @ivar silent: Silent flag. If C{False}, C{L{UnhandledEventError}} is raised if an event cannot be handled.
+                  If C{True}, do nothing, listener does not handle the event.
     @type silent: C{str}
     """
     def __init__(self, prefix='evt_', suffix='', default='eventPerformed', silent=False):
@@ -268,7 +281,10 @@ class Event:
         @return: Object converted string.
         @rtype: C{str}
         """
-        return '<%s.%s type=%s source=%s content=%s>' % (__name__, self.__class__.__name__, self.type, self.source, self.content)
+        return (
+            '<%s.%s type=%s source=%s content=%s>'
+            % (__name__, self.__class__.__name__, self.type, self.source, self.content)
+        )
 
 
 class UnhandledEventError(AttributeError):

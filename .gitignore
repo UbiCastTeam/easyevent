@@ -1,2 +1,10 @@
-build/
+__pycache__/
 *.pyc
+
+# Unit test / coverage reports
+.coverage*
+coverage*
+htmlcov
+report.xml
+.mypy_cache
+.pytest_cache
