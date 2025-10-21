@@ -1,0 +1,37 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    # It is not possible to use GitHub Python setup because a system dependency is required
+
+    steps:
+    - name: Checkout project
+      uses: actions/checkout@v4
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-gi python3-venv make
+    - name: Install venv
+      run: |
+        python3 -m venv /opt/venv --system-site-packages
+        /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+        /opt/venv/bin/pip install --no-cache-dir --editable '.[dev]'
+    - name: Test
+      run: |
+        make lint_local
+        make deadcode_local
+        make test_local
+      env:
+        PATH: /opt/venv/bin:/usr/sbin:/usr/bin:/sbin:/bin
